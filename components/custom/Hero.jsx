@@ -68,14 +68,14 @@ function Hero() {
                         <div className="inline-flex items-center justify-center space-x-2 bg-electric-blue-500/20 rounded-full px-6 py-3 mb-6 border border-electric-blue-500/30">
                             <Sparkles className="h-6 w-6 text-electric-blue-400" />
                             <span className="text-electric-blue-400 text-lg font-semibold tracking-wide">
-                                NEXT-GEN AI DEVELOPMENT
+                                EMN-Web
                             </span>
                         </div>
                         <h1 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-[linear-gradient(45deg,#60a5fa_30%,#ec4899)] leading-tight">
                             Code the <br className="md:hidden" />Impossible
                         </h1>
                         <p className="text-xl text-neon-cyan max-w-3xl mx-auto font-mono tracking-tight">
-                            Transform your wildest ideas into production-ready code with Ai-powered assistance
+                            Make your wildest ideas into websites with Ai-powered assistance
                         </p>
                     </div>
 
