@@ -318,7 +318,7 @@ jobs:
           python -m pytest chatgpt_bridge/tests -q
           python - <<'PY'
           from backlot.server import app
-          paths={r.path for r in app.routes}
+          paths={getattr(r, 'path', None) for r in app.routes}
           assert '/settings/api' in paths and '/settings/api/add' in paths
           from chatgpt_bridge.server import mcp,remote
           assert remote is None
