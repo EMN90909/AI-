@@ -27,7 +27,7 @@ jobs:
           git clone --depth 1 --branch main https://github.com/OpenMontageInc/OpenMontage.git "$UPSTREAM"
           UPSTREAM_SHA=$(git -C "$UPSTREAM" rev-parse HEAD)
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
-          rsync -a --exclude=.git "$UPSTREAM/" ./
+          rsync -a --exclude=.git --exclude=".github/workflows/" "$UPSTREAM/" ./
           cp -a "$SAVED/chatgpt_bridge" ./chatgpt_bridge
           mkdir -p .github/workflows
           cp "$SAVED/import.yml" .github/workflows/import-openmontage.yml
@@ -45,6 +45,7 @@ jobs:
           test -f pipeline_defs/documentary-montage.yaml
           test -f tools/video/video_compose.py
           test -f chatgpt_bridge/server.py
+          test ! -f .github/workflows/ci.yml
       - name: Commit and push imported snapshot to main
         shell: bash
         run: |
