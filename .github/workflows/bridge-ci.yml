@@ -1,0 +1,67 @@
+name: Verify OpenMontage and ChatGPT MCP bridge
+on:
+  push:
+    paths:
+      - 'chatgpt_bridge/**'
+      - '.github/workflows/bridge-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies in OpenMontage's own venv
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-dev.txt -r chatgpt_bridge/requirements.txt
+      - name: Static and bridge contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          python -m compileall -q chatgpt_bridge
+          python -m pytest chatgpt_bridge/tests -q
+      - name: Verify actual MCP Streamable HTTP tool discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          python -m chatgpt_bridge.server > /tmp/openmontage-mcp.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import socket, time
+          for attempt in range(80):
+              with socket.socket() as sock:
+                  if sock.connect_ex(("127.0.0.1", 8765)) == 0:
+                      break
+              time.sleep(0.25)
+          else:
+              raise RuntimeError("MCP server failed to start")
+          PY
+          python - <<'PY'
+          import asyncio
+          from mcp import Client
+          async def verify():
+              async with Client("http://127.0.0.1:8765/mcp") as client:
+                  found = await client.list_tools()
+                  names = {x.name for x in found}
+                  assert {"list_video_pipelines", "create_video_project", "start_local_render"} <= names, names
+                  result = await client.call_tool("list_video_pipelines", {})
+                  assert not result.is_error, result
+                  print("MCP handshake OK; tools:", sorted(names))
+          asyncio.run(verify())
+          PY
+      - name: Upstream OpenMontage contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          make test-contracts
