@@ -1,42 +1,118 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Local model downloads (e.g. Piper TTS voices, fetched at runtime — not source)
+*.onnx
+*.onnx.json
 
-# testing
-/coverage
+# Test/IDE
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.trae/
+.idea/
+.vscode/
 
-# next.js
-/.next/
-/out/
+# Pipeline outputs (regenerable — never commit large media)
+output/
+pipeline/
+tests/qa/output/
 
-# production
-/build
+# Project workspaces (generated assets, renders — all regenerable)
+projects/
 
-# misc
-.DS_Store
-*.pem
+# Corpus directories (downloaded stock clips, thumbnails, embeddings —
+# regenerable from source APIs via corpus_builder). Explicit rule even
+# though most corpora live under projects/ since agents sometimes
+# build scratch corpora at the repo root.
+corpus/
+**/corpus/
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# User music library (personal royalty-free tracks — not part of repo)
+music_library/
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment & credentials
+.env
 .env.local
+*.env
+.youtube-token.json
+# Google service-account / Vertex AI keys — never commit
+gcp-*.json
+*-service-account.json
+service-account*.json
+service_account*.json
 
-# vercel
-.vercel
+# Stray media downloads (test/scratch clips left in repo root)
+pexels_video_*.mp4
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Scratch/debug scripts
+scratch/
+
+# Internal docs (strategy, handoffs, playbooks — not shipped)
+internal/
+
+# Local agent config (user-specific)
+.claude/memory/
+.claude/settings.local.json
+
+# Agent skills lock (local install tracking)
+skills-lock.json
+
+# Generated images (logo drafts — final logo lives in assets/)
+logo_*.png
+generated_image.png
+
+# Downloaded music files (Pixabay, Freesound — not source code)
+pixabay_music_*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (for remotion-composer/)
+node_modules/
+
+# Remotion build output and copied project assets (regenerable at render time)
+remotion-composer/out/
+# Project-local bespoke ("atelier") compositions — hand-authored per video,
+# throwaway and regenerable. Keeps the shared src/ free of one-off scenes.
+remotion-composer/projects/
+remotion-composer/public/*
+# But keep demo props (shipped with the project for zero-key demos)
+!remotion-composer/public/demo-props/
+# Ignore test/scratch compositions in demo-props (keep only curated demos)
+remotion-composer/public/demo-props/test-*
+remotion-composer/public/demo-props/talking-head-*
+remotion-composer/public/demo-props/caption-burn-*
+
+venv/
+.venv/
+
+# Backlot local cache (thumbnails)
+.backlot/
+
+# Workspace-local third-party runtimes (for example the portable Blender LTS
+# used by blender_world). These are checksum-verified but never committed.
+.runtime/
+
+# Local Wan / diffusers GPU environment
+.venv-wan/
+
+# npm cache (NPM_CONFIG_CACHE — see .env), keeps npx/HyperFrames writes in-tree
+.npm-cache/
+
+# pytest scratch trees. These land in the repo root when the OS temp/profile
+# dirs are unwritable (see the NPM_CONFIG_CACHE note above), so `make test`
+# can leave pytest-of-<user>/ behind as untracked noise.
+pytest-of-*/
+
+
+# GFPGAN/facexlib download face-detection weights to ./gfpgan/weights at runtime
+gfpgan/
