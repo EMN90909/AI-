@@ -116,3 +116,6 @@ pytest-of-*/
 
 # GFPGAN/facexlib download face-detection weights to ./gfpgan/weights at runtime
 gfpgan/
+
+# Local encrypted provider keys (never commit)
+.openmontage/

@@ -173,6 +173,8 @@ async def _lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Backlot", docs_url=None, redoc_url=None, lifespan=_lifespan)
+    from chatgpt_bridge.settings_ui import router as api_settings_router
+    app.include_router(api_settings_router)
 
     # ---- API ----------------------------------------------------------
 
