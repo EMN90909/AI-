@@ -1,0 +1,62 @@
+name: Import OpenMontage upstream (one-time)
+on:
+  push:
+    paths:
+      - '.github/workflows/import-openmontage.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Copy OpenMontage into this ordinary repository (not a fork)
+        shell: bash
+        run: |
+          set -euo pipefail
+          UPSTREAM="$RUNNER_TEMP/upstream"
+          SAVED="$RUNNER_TEMP/saved-bridge"
+          mkdir -p "$SAVED"
+          cp -a chatgpt_bridge "$SAVED/"
+          cp .github/workflows/import-openmontage.yml "$SAVED/import.yml"
+          git clone --depth 1 --branch main https://github.com/OpenMontageInc/OpenMontage.git "$UPSTREAM"
+          UPSTREAM_SHA=$(git -C "$UPSTREAM" rev-parse HEAD)
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
+          rsync -a --exclude=.git "$UPSTREAM/" ./
+          cp -a "$SAVED/chatgpt_bridge" ./chatgpt_bridge
+          mkdir -p .github/workflows
+          cp "$SAVED/import.yml" .github/workflows/import-openmontage.yml
+          printf 'Original: https://github.com/OpenMontageInc/OpenMontage\nSnapshot: %s\nImported as a normal repository, not a GitHub fork.\nLicense: AGPL-3.0 (LICENSE). Old main preserved in archive/pre-openmontage-2026-11-09.\n' "$UPSTREAM_SHA" > UPSTREAM_IMPORT.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Verify bridge contracts before importing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -q pytest pyyaml pydantic jsonschema
+          python -m pytest chatgpt_bridge/tests -q
+          test -f LICENSE
+          test -f AGENT_GUIDE.md
+          test -f pipeline_defs/documentary-montage.yaml
+          test -f tools/video/video_compose.py
+          test -f chatgpt_bridge/server.py
+      - name: Commit and push imported snapshot to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import OpenMontage snapshot and ChatGPT MCP bridge"
+            git push origin HEAD:main
+          fi
+      - name: Test upstream contract suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -q -r requirements.txt -r requirements-dev.txt
+          make test-contracts
