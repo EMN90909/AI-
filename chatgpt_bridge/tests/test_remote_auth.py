@@ -30,3 +30,32 @@ def test_grok_client_uses_read_only_allowlist():
     assert "start_local_render" not in READ_ONLY_TOOLS
     with pytest.raises(ValueError):
         build_request("Hello", "http://localhost:8765/mcp")
+
+
+def test_remote_mcp_rejects_unauthenticated_requests():
+    """A public hostname must not execute or discover private tools without OAuth."""
+    from fastapi.testclient import TestClient
+    from mcp.server import MCPServer
+    from chatgpt_bridge.remote_auth import auth_kwargs
+
+    config = RemoteAuthConfig(
+        public_url="https://mcp.example.org/mcp",
+        issuer="https://auth.example.org/",
+        jwks_url="https://auth.example.org/keys.json",
+        audience="urn:openmontage",
+        subject="operator-123",
+    )
+    server = MCPServer("Secure Test", **auth_kwargs(config))
+    app = server.streamable_http_app(
+        transport_security=security_settings(config),
+        json_response=True,
+        stateless_http=True,
+    )
+    with TestClient(app, base_url="https://mcp.example.org") as client:
+        response = client.post(
+            "/mcp",
+            json={"jsonrpc": "2.0", "method": "tools/list", "id": 1},
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+    assert response.status_code == 401
+    assert "WWW-Authenticate" in response.headers
