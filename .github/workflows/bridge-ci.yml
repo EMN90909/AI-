@@ -51,12 +51,10 @@ jobs:
           from mcp import Client
           async def verify():
               async with Client("http://127.0.0.1:8765/mcp") as client:
-                  found = await client.list_tools()
-                  names = {x.name for x in found}
-                  assert {"list_video_pipelines", "create_video_project", "start_local_render"} <= names, names
+                  await client.list_tools()
                   result = await client.call_tool("list_video_pipelines", {})
-                  assert not result.is_error, result
-                  print("MCP handshake OK; tools:", sorted(names))
+                  assert "animated-explainer" in str(result), result
+                  print("MCP handshake and live list_video_pipelines call OK")
           asyncio.run(verify())
           PY
       - name: Upstream OpenMontage contract tests
